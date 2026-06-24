@@ -1,0 +1,42 @@
+name: Build standalone CSI firmware
+
+# Builds firmware/ (CSI + BLE + OTA) and publishes flipper-csi-sense.bin.
+# The Android app downloads this asset from the latest release and flashes it OTA.
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write   # needed to attach the .bin to a GitHub Release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install PlatformIO
+        run: pip install --upgrade platformio
+
+      - name: Build
+        run: pio run -d firmware
+
+      - name: Stage artifact
+        run: cp firmware/.pio/build/esp32marauder/firmware.bin flipper-csi-sense.bin
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flipper-csi-sense
+          path: flipper-csi-sense.bin
+
+      - name: Publish to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: flipper-csi-sense.bin
