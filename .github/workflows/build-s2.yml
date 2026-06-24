@@ -1,0 +1,35 @@
+name: Build ESP32-S2 firmware
+
+# Compiles s2-firmware/ (official Flipper WiFi Dev Board, ESP32-S2, UART transport).
+
+on:
+  workflow_dispatch:
+  push:
+    tags: ['s2-v*']
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install PlatformIO
+        run: pip install --upgrade platformio
+      - name: Build
+        run: pio run -d s2-firmware
+      - name: Stage artifact
+        run: cp s2-firmware/.pio/build/flipper_wifi_devboard_s2/firmware.bin flipper-csi-s2.bin
+      - uses: actions/upload-artifact@v4
+        with:
+          name: flipper-csi-s2
+          path: flipper-csi-s2.bin
+      - name: Publish to Release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: flipper-csi-s2.bin
