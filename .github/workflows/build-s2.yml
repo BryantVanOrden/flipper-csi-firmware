@@ -22,14 +22,31 @@ jobs:
         run: pip install --upgrade platformio
       - name: Build
         run: pio run -d s2-firmware
-      - name: Stage artifact
-        run: cp s2-firmware/.pio/build/flipper_wifi_devboard_s2/firmware.bin flipper-csi-s2.bin
+      - name: Install esptool
+        run: pip install "esptool==4.8.1"
+      - name: Stage + merge a single flashable image
+        run: |
+          BD=s2-firmware/.pio/build/flipper_wifi_devboard_s2
+          cp "$BD/firmware.bin" flipper-csi-s2.bin
+          BOOT_APP0=$(find ~/.platformio/packages/framework-arduinoespressif32 -name boot_app0.bin | head -1)
+          echo "boot_app0: $BOOT_APP0"
+          # Single image flashable at 0x0 (esptool / web flasher): write_flash 0x0 flipper-csi-s2-merged.bin
+          python -m esptool --chip esp32s2 merge_bin -o flipper-csi-s2-merged.bin \
+            --flash_mode dio --flash_size 4MB \
+            0x1000  "$BD/bootloader.bin" \
+            0x8000  "$BD/partitions.bin" \
+            0xe000  "$BOOT_APP0" \
+            0x10000 "$BD/firmware.bin"
       - uses: actions/upload-artifact@v4
         with:
           name: flipper-csi-s2
-          path: flipper-csi-s2.bin
+          path: |
+            flipper-csi-s2.bin
+            flipper-csi-s2-merged.bin
       - name: Publish to Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
         with:
-          files: flipper-csi-s2.bin
+          files: |
+            flipper-csi-s2.bin
+            flipper-csi-s2-merged.bin
