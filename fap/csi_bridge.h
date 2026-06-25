@@ -20,11 +20,10 @@
 #define TAG "CsiBridge"
 
 // UART that the ESP32-S2 is wired to on the Flipper header:
-//   FuriHalSerialIdUsart  = pins 13(TX)/14(RX)  (default Marauder dev board)
+//   FuriHalSerialIdUsart  = pins 13(TX)/14(RX)  <- official WiFi Dev Board (default)
 //   FuriHalSerialIdLpuart = pins 15(TX)/16(RX)
-// Set this to whichever pins your multiboard's ESP32 uses (the set that
-// answered when you bridged it).
-#define CSI_UART_ID    FuriHalSerialIdLpuart
+// The official Flipper WiFi Dev Board answered on USART (13/14) over the bridge.
+#define CSI_UART_ID    FuriHalSerialIdUsart
 #define CSI_UART_BAUD  115200u
 
 #define UART_RX_STREAM_SIZE 2048
