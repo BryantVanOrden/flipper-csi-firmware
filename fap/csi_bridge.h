@@ -15,6 +15,7 @@
 #include <gui/gui.h>
 #include <input/input.h>
 #include <bt/bt_service/bt.h>
+#include "ble_serial.h"
 
 #define TAG "CsiBridge"
 
@@ -36,6 +37,7 @@ typedef struct {
     Gui* gui;
     ViewPort* view_port;
     Bt* bt;
+    FuriHalBleProfileBase* ble_profile;
 
     FuriHalSerialHandle* serial;
     FuriStreamBuffer* uart_rx_stream;  // ESP32 -> (worker) -> BLE

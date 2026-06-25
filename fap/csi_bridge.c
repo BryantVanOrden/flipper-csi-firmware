@@ -69,7 +69,7 @@ static int32_t bridge_worker(void* context) {
         size_t off = 0;
         while(off < n && app->running) {
             uint16_t chunk = (uint16_t)(n - off);
-            if(furi_hal_bt_serial_tx(buf + off, chunk)) {
+            if(ble_profile_serial_tx(app->ble_profile, buf + off, chunk)) {
                 off += chunk;
                 app->bytes_to_phone += chunk;
             } else {
@@ -128,13 +128,16 @@ int32_t csi_bridge_app(void* p) {
     app->worker = furi_thread_alloc_ex("CsiBridgeWorker", 2048, bridge_worker, app);
     furi_thread_start(app->worker);
 
-    // --- BLE: hijack the serial profile + advertise ---
+    // --- BLE: start our serial profile + advertise as "Flipper <name>" ---
     bt_set_status_changed_callback(app->bt, bt_status_callback, app);
-    if(furi_hal_bt_is_active()) {
-        furi_hal_bt_serial_set_event_callback(BT_SERIAL_RX_BUFFER, bt_serial_event_callback, app);
-        furi_hal_bt_start_advertising();
+    BleProfileSerialParams params = {.device_name_prefix = NULL, .mac_xor = 0};
+    app->ble_profile = bt_profile_start(app->bt, ble_profile_serial, &params);
+    furi_hal_bt_start_advertising();
+    if(app->ble_profile) {
+        ble_profile_serial_set_event_callback(
+            app->ble_profile, BT_SERIAL_RX_BUFFER, bt_serial_event_callback, app);
     } else {
-        FURI_LOG_E(TAG, "Enable Bluetooth and restart the app");
+        FURI_LOG_E(TAG, "Failed to start BLE serial profile (is Bluetooth enabled?)");
     }
 
     // --- input loop ---
@@ -151,8 +154,8 @@ int32_t csi_bridge_app(void* p) {
     furi_thread_join(app->worker);
     furi_thread_free(app->worker);
 
-    furi_hal_bt_serial_set_event_callback(0, NULL, NULL);
     bt_set_status_changed_callback(app->bt, NULL, NULL);
+    bt_profile_restore_default(app->bt);
 
     if(app->serial) {
         furi_hal_serial_async_rx_stop(app->serial);
