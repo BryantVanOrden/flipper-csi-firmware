@@ -1,0 +1,14 @@
+App(
+    appid="csi_bridge",
+    name="CSI BLE Bridge",
+    apptype=FlipperAppType.EXTERNAL,
+    entry_point="csi_bridge_app",
+    stack_size=2 * 1024,
+    fap_category="GPIO",
+    fap_description="Bridges ESP32-S2 CSI (UART) to the phone over the Flipper's BLE",
+    fap_author="BryantVanOrden",
+    requires=[
+        "bt",
+        "gui",
+    ],
+)

@@ -1,0 +1,25 @@
+name: Build Flipper FAP (CSI BLE Bridge)
+
+# Compiles the Flipper app (fap/) into a .fap with ufbt, so it can be installed
+# on the Flipper (/ext/apps/GPIO/). Builds against the dev SDK (closest to Momentum).
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - id: build
+        uses: flipperdevices/flipperzero-ufbt-action@v0.1.3
+        with:
+          app-dir: fap
+          sdk-channel: dev
+      - uses: actions/upload-artifact@v4
+        with:
+          name: csi-bridge-fap
+          path: ${{ steps.build.outputs.fap-artifacts }}
