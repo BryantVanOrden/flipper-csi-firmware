@@ -37,12 +37,20 @@ jobs:
             0x8000  "$BD/partitions.bin" \
             0xe000  "$BOOT_APP0" \
             0x10000 "$BD/firmware.bin"
+          # Bundle for the Flipper ESP Flasher app (drop into /ext/apps_data/esp_flasher/)
+          mkdir -p esp_flasher
+          cp "$BD/bootloader.bin" esp_flasher/bootloader.bin
+          cp "$BD/partitions.bin" esp_flasher/partition-table.bin
+          cp "$BOOT_APP0"         esp_flasher/boot_app0.bin
+          cp "$BD/firmware.bin"   esp_flasher/firmware.bin
+          (cd esp_flasher && zip -r ../flipper-csi-s2-espflasher.zip .)
       - uses: actions/upload-artifact@v4
         with:
           name: flipper-csi-s2
           path: |
             flipper-csi-s2.bin
             flipper-csi-s2-merged.bin
+            flipper-csi-s2-espflasher.zip
       - name: Publish to Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: softprops/action-gh-release@v2
@@ -50,3 +58,4 @@ jobs:
           files: |
             flipper-csi-s2.bin
             flipper-csi-s2-merged.bin
+            flipper-csi-s2-espflasher.zip
